@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/threatmate/restapiclient"
 )
@@ -42,18 +43,22 @@ func (c *Client) HTTPClient() *http.Client {
 
 // Do performs an HTTP request to the Duo API with the given method, path, input, and output.
 func (c *Client) Do(ctx context.Context, method string, path string, input any, output any) error {
-	fullURL := strings.TrimRight(c.config.BaseURL, "/") + "/" + strings.TrimLeft(path, "/")
-	parsedURL, err := url.Parse(fullURL)
-	if err != nil {
-		return fmt.Errorf("error parsing URL: %w", err)
-	}
+	dateHeader := time.Now().UTC().Format(http.TimeFormat)
 
-	signResult, err := Sign(method, parsedURL.Host, parsedURL.Path, parsedURL.Query(), c.config.SecretKey, c.config.IntegrationKey)
+	// TODO: If this is a POST request, then we're supposed to also include the body form parameters in the signature,
+	// TODO: *in place of* the URL query parameters.
+	// TODO: If we ever need to do POST requests with body parameters, implement that here.  Basically, we'll just need to check
+	// TODO: the type of the input parameter, and if it's form data, then tack that onto the URL as if it where query parameters (for signing purposes only).
+
+	authorizationToken, err := Sign(ctx, method, strings.TrimRight(c.config.BaseURL, "/")+"/"+strings.TrimLeft(path, "/"), c.config.SecretKey, c.config.IntegrationKey, dateHeader)
 	if err != nil {
 		return fmt.Errorf("error signing request: %w", err)
 	}
 
-	err = c.client.Do(ctx, method, path, input, output, restapiclient.OptionHeader("Date", signResult.Date), restapiclient.OptionHeader("Authorization", "Basic "+signResult.AuthHeader))
+	err = c.client.Do(ctx, method, path, input, output,
+		restapiclient.OptionHeader("Date", dateHeader),
+		restapiclient.OptionHeader("Authorization", "Basic "+authorizationToken),
+	)
 	if err != nil {
 		return fmt.Errorf("error performing request: %w", err)
 	}
