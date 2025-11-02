@@ -25,14 +25,13 @@ type Client struct {
 
 // New creates a new Duo API client with the given configuration.
 func New(config Config) *Client {
-	baseURL := config.BaseURL
-	if !strings.HasPrefix(baseURL, "http://") && !strings.HasPrefix(baseURL, "https://") {
-		baseURL = "https://" + baseURL
+	if !strings.HasPrefix(config.BaseURL, "http://") && !strings.HasPrefix(config.BaseURL, "https://") {
+		config.BaseURL = "https://" + config.BaseURL
 	}
 
 	return &Client{
 		config: config,
-		client: restapiclient.New(baseURL),
+		client: restapiclient.New(config.BaseURL),
 	}
 }
 
