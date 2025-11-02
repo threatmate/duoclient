@@ -49,7 +49,7 @@ func (c *Client) Do(ctx context.Context, method string, path string, input any, 
 		return fmt.Errorf("error parsing URL: %w", err)
 	}
 
-	signResult, err := Sign("GET", parsedURL.Host, path, parsedURL.Query(), c.config.SecretKey, c.config.IntegrationKey)
+	signResult, err := Sign(method, parsedURL.Host, path, parsedURL.Query(), c.config.SecretKey, c.config.IntegrationKey)
 	if err != nil {
 		return fmt.Errorf("error signing request: %w", err)
 	}
