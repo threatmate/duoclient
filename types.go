@@ -56,6 +56,12 @@ type GetUsersResponse struct {
 	Metadata Metadata `json:"metadata,omitempty"`
 }
 
+type GetGroupsResponse struct {
+	Response []Group  `json:"response"`
+	Stat     string   `json:"stat"`
+	Metadata Metadata `json:"metadata,omitempty"`
+}
+
 type Metadata struct {
 	TotalObjects int  `json:"total_objects"`
 	NextOffset   *int `json:"next_offset,omitempty"`
