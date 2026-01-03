@@ -137,7 +137,7 @@ func (c *Client) GetGroups(ctx context.Context) ([]Group, error) {
 	return allGroups, nil
 }
 
-// GetGroupsPage retrieves a single page of users from the Duo API with the specified limit and offset.
+// GetGroupsPage retrieves a single page of groups from the Duo API with the specified limit and offset.
 func (c *Client) GetGroupsPage(ctx context.Context, limit, offset int) (*GetGroupsResponse, error) {
 	params := url.Values{}
 	params.Set("limit", fmt.Sprintf("%d", limit))
