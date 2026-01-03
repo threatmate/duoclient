@@ -111,3 +111,49 @@ func (c *Client) GetUsersPage(ctx context.Context, limit, offset int) (*GetUsers
 
 	return &result, nil
 }
+
+// GetGroups retrieves all groups from the Duo API, handling pagination as needed.
+func (c *Client) GetGroups(ctx context.Context) ([]Group, error) {
+	var allGroups []Group
+	limit := 100
+	offset := 0
+
+	for {
+		result, err := c.GetGroupsPage(ctx, limit, offset)
+		if err != nil {
+			return nil, err
+		}
+
+		allGroups = append(allGroups, result.Response...)
+
+		if result.Metadata.NextOffset == nil {
+			// No more pages
+			break
+		}
+
+		offset = *result.Metadata.NextOffset
+	}
+
+	return allGroups, nil
+}
+
+// GetGroupsPage retrieves a single page of groups from the Duo API with the specified limit and offset.
+func (c *Client) GetGroupsPage(ctx context.Context, limit, offset int) (*GetGroupsResponse, error) {
+	params := url.Values{}
+	params.Set("limit", fmt.Sprintf("%d", limit))
+	params.Set("offset", fmt.Sprintf("%d", offset))
+
+	path := "/admin/v1/groups?" + params.Encode()
+
+	var result GetGroupsResponse
+	err := c.Do(ctx, http.MethodGet, path, nil, &result)
+	if err != nil {
+		return nil, fmt.Errorf("error getting groups: %w", err)
+	}
+
+	if result.Stat != "OK" {
+		return nil, fmt.Errorf("duo API returned error status: %s", result.Stat)
+	}
+
+	return &result, nil
+}
